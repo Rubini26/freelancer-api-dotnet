@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Freelancer Directory</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { margin: 5px; }
+    .freelancer { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Freelancer Directory</h1>
+
+  <h2>Register New Freelancer</h2>
+  <input id="username" placeholder="Username">
+  <input id="email" placeholder="Email">
+  <input id="phone" placeholder="Phone Number">
+  <button onclick="registerFreelancer()">Register</button>
+
+  <h2>Freelancers</h2>
+  <div id="freelancerList">Loading...</div>
+
+  <script>
+    const apiBase = 'http://localhost:5114/api/Freelancers'; // change if your port is different
+
+    function loadFreelancers() {
+      fetch(apiBase)
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('freelancerList');
+          list.innerHTML = '';
+          data.forEach(f => {
+            list.innerHTML += `
+              <div class="freelancer">
+                <b>${f.username}</b><br>
+                Email: ${f.email}<br>
+                Phone: ${f.phoneNumber}<br>
+                <button onclick="deleteFreelancer(${f.id})">Delete</button>
+                <button onclick="startUpdate(${f.id}, '${f.username}', '${f.email}', '${f.phoneNumber}')">Update</button>
+              </div>`;
+          });
+        });
+    }
+
+    function registerFreelancer() {
+      const data = {
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        phoneNumber: document.getElementById('phone').value,
+        isArchived: false,
+        skillSets: [],
+        hobbies: []
+      };
+
+      fetch(apiBase, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(() => {
+        loadFreelancers();
+        document.getElementById('username').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('phone').value = '';
+      });
+    }
+
+    function deleteFreelancer(id) {
+      fetch(`${apiBase}/${id}`, { method: 'DELETE' })
+        .then(() => loadFreelancers());
+    }
+
+    function startUpdate(id, username, email, phoneNumber) {
+      const newName = prompt("Update username:", username);
+      const newEmail = prompt("Update email:", email);
+      const newPhone = prompt("Update phone number:", phoneNumber);
+
+      const updated = {
+        id,
+        username: newName,
+        email: newEmail,
+        phoneNumber: newPhone,
+        isArchived: false,
+        skillSets: [],
+        hobbies: []
+      };
+
+      fetch(`${apiBase}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      }).then(() => loadFreelancers());
+    }
+
+    // Load on start
+    loadFreelancers();
+  </script>
+</body>
+</html>
